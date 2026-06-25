@@ -3,10 +3,21 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const path = require("path");
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:"],
+    },
+  },
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || "*",
   methods: ["GET", "POST"],
@@ -24,6 +35,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/generate", generateLimiter, require("./routes/generate"));
 app.use("/api/payments", require("./routes/payments"));
 
+app.use(express.static(path.join(__dirname, "public")));
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 app.use((req, res) => res.status(404).json({ error: "Route introuvable" }));
